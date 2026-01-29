@@ -12,8 +12,7 @@ import java.util.*;
 
 public class ServicioTransformador {
     private static final String INPUT_TOPIC = "docs-entrada";
-    // Grupo distinto al archivador para permitir que funcionen en paralelo
-    private static final String GROUP_ID = "grupo-transformacion";
+    private static final String GROUP_ID = "grupo-transformacion"; 
     
     public static void main(String[] args) {
         // Configuración del Consumidor
@@ -31,8 +30,11 @@ public class ServicioTransformador {
 
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
         KafkaProducer<String, String> producer = new KafkaProducer<>(producerProps);
+        
         consumer.subscribe(Collections.singletonList(INPUT_TOPIC));
         Gson gson = new Gson();
+
+        System.out.println(">>> TRANSFORMADOR (DISTRIBUCIÓN POR DOCUMENTO) INICIADO <<<");
 
         try {
             while (true) {
@@ -40,26 +42,32 @@ public class ServicioTransformador {
                 for (ConsumerRecord<String, String> record : records) {
                     JsonObject originalJson = gson.fromJson(record.value(), JsonObject.class);
                     
-                    // Eliminar sender y dividir documento (transformación)
                     String tipo = originalJson.get("tipo").getAsString();
                     String contenido = originalJson.get("documento").getAsString();
-                    originalJson.remove("sender"); // Requisito: sender no relevante
-
-                    // Dividir en páginas de 400 carácteres
-                    List<String> paginas = dividirEnPaginas(contenido, 400);
+                    // Usamos el titulo como CLAVE DE PARTICIONADO para agrupar las páginas
+                    String titulo = originalJson.get("titulo").getAsString(); 
                     
+                    originalJson.remove("sender"); 
+
+                    // Dividimos en páginas
+                    List<String> paginas = dividirEnPaginas(contenido, 400);
                     String targetTopic = tipo.equals("Color") ? "docs-color" : "docs-bn";
+
+                    System.out.println("Procesando '" + titulo + "' (" + paginas.size() + " paginas) -> Enviado a " + targetTopic);
 
                     for (int i = 0; i < paginas.size(); i++) {
                         JsonObject paginaJson = originalJson.deepCopy();
                         paginaJson.addProperty("documento", paginas.get(i));
                         paginaJson.addProperty("pagina", (i + 1) + "/" + paginas.size());
                         
-                        producer.send(new ProducerRecord<>(targetTopic, gson.toJson(paginaJson)));
+                        String jsonSalida = gson.toJson(paginaJson);
+
+                        // La CLAVE es el TITULO, asi Kafka garantiza que todos los mensajes con la misma clave van a la misma impresora
                     }
-                    System.out.println("Documento transformado y enviado a " + targetTopic);
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             consumer.close();
             producer.close();
@@ -68,6 +76,7 @@ public class ServicioTransformador {
 
     private static List<String> dividirEnPaginas(String texto, int size) {
         List<String> paginas = new ArrayList<>();
+        if (texto == null || texto.isEmpty()) return paginas;
         for (int i = 0; i < texto.length(); i += size) {
             paginas.add(texto.substring(i, Math.min(texto.length(), i + size)));
         }

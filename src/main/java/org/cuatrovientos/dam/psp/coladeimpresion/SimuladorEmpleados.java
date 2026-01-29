@@ -47,7 +47,7 @@ public class SimuladorEmpleados {
             System.out.println("📤 Enviado: Doc_" + i + " [" + tipo + "] por " + empleado);
             
             // Pausa pequeña para dar realismo al funcionamiento
-            Thread.sleep(200);
+            Thread.sleep(1000);
         }
 
         producer.close();

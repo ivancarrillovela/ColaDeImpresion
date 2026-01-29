@@ -20,9 +20,9 @@ public class LauncherImpresoras {
         System.out.println(">>> INICIANDO SISTEMA DE IMPRESIÓN <<<");
 
         // Lanzamos 3 Impresoras B/N
-        executor.submit(new TareaImpresora("B/N", "ImpresoraBN_1"));
-        executor.submit(new TareaImpresora("B/N", "ImpresoraBN_2"));
-        executor.submit(new TareaImpresora("B/N", "ImpresoraBN_3"));
+        executor.submit(new TareaImpresora("BN", "ImpresoraBN_1"));
+        executor.submit(new TareaImpresora("BN", "ImpresoraBN_2"));
+        executor.submit(new TareaImpresora("BN", "ImpresoraBN_3"));
 
         // Lanzamos 2 Impresoras Color
         executor.submit(new TareaImpresora("Color", "ImpresoraColor_1"));
@@ -70,7 +70,7 @@ public class LauncherImpresoras {
                         String fileName = "print_" + System.currentTimeMillis() + "_" + record.offset() + ".txt";
                         try (FileWriter writer = new FileWriter(new File(directorio, fileName))) {
                             writer.write(record.value());
-                            System.out.println("🖨️ [" + id + "] Imprimió documento offset: " + record.offset());
+                            System.out.println("🖨️ [" + id + "] Imprimió el documento: " + record.offset());
                         }
                     }
                 }
