@@ -63,6 +63,7 @@ public class ServicioTransformador {
                         String jsonSalida = gson.toJson(paginaJson);
 
                         // La CLAVE es el TITULO, asi Kafka garantiza que todos los mensajes con la misma clave van a la misma impresora
+                        producer.send(new ProducerRecord<>(targetTopic, titulo, jsonSalida));
                     }
                 }
             }
