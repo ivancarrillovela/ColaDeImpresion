@@ -1,1 +1,0 @@
-{"tipo":"Color","titulo":"Doc_7","documento":"orem ips","pagina":"2/2"}

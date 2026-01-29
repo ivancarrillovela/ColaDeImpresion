@@ -1,1 +1,0 @@
-{"tipo":"Color","titulo":"Doc_3","documento":"o","pagina":"2/2"}
